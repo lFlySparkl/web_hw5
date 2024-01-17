@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Getting Exchange Rates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        #loadingIndicator {
+            text-align: center;
+            position: relative;
+            display: none;
+            /* Initially hide the loading indicator */
+        }
+
+        #loadingIndicator img {
+            display: block;
+            margin: auto;
+        }
+
+        /* Add some margin to the checkboxes for better spacing */
+        .currency-checkbox {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand navbar-dark bg-dark" aria-label="Second navbar example">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ url_for('index') }}">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" />
+                </a>
+                <div class="collapse navbar-collapse" id="navbarsExample02">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="{{ url_for('index') }}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('message') }}">Send message</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('get_exchange_rates') }}">Exchange Rates</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container mt-3">
+        <h1 id="gettingRatesMessage">Getting Exchange Rates</h1>
+
+        <!-- Move the result container inside the form div -->
+        <form id="exchangeRatesForm" action="{{ url_for('get_exchange_rates') }}" method="post">
+            <div id="resultContainer"></div>
+            <div id="loadingIndicator">
+                Loading...
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading GIF" style="width: 70px; height: 70px;">
+            </div>
+            <!-- Add checkboxes for currency selection -->
+            <div class="form-group">
+                <label for="currencies">Select Currencies:</label>
+                <div>
+                    <input type="checkbox" class="currency-checkbox" id="usd" name="currencies" value="USD">
+                    <label for="usd">USD</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="eur" name="currencies" value="EUR">
+                    <label for="eur">EUR</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="chf" name="currencies" value="CHF">
+                    <label for="chf">CHF</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="gbp" name="currencies" value="GBP">
+                    <label for="gbp">GBP</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="plz" name="currencies" value="PLZ">
+                    <label for="plz">PLZ</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="sek" name="currencies" value="SEK">
+                    <label for="sek">SEK</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="xau" name="currencies" value="XAU">
+                    <label for="xau">XAU</label>
+
+                    <input type="checkbox" class="currency-checkbox" id="cad" name="currencies" value="CAD">
+                    <label for="cad">CAD</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="days">Number of Days (1-10):</label>
+                <input type="number" class="form-control" id="days" name="days" min="1" max="10" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="getRatesButton">Get Rates</button>
+        </form>
+
+        <script>
+            document.getElementById('exchangeRatesForm').addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                // Show the loading indicator when the form is submitted
+                document.getElementById('loadingIndicator').style.display = 'block';
+
+                // Собираем выбранные валюты в массив
+                const selectedCurrencies = Array.from(document.querySelectorAll('.currency-checkbox:checked'))
+                    .map(checkbox => checkbox.value);
+
+                // Если массив пуст (все чекбоксы не выбраны), добавляем "all"
+                const currenciesToSend = selectedCurrencies.length > 0 ? selectedCurrencies.join(',') : 'all';
+
+                // Добавляем выбранные валюты в FormData
+                const formData = new FormData(this);
+                formData.set('currencies', currenciesToSend);
+
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Hide the loading indicator after the response is received
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (response.ok) {
+                    // Hide the "Getting Exchange Rates" message
+                    document.getElementById('gettingRatesMessage').style.display = 'none';
+
+                    // Update the content of the result container
+                    const resultContainer = document.getElementById('resultContainer');
+                    resultContainer.innerHTML = await response.text();
+                } else {
+                    console.error('Помилка отримання даних');
+                }
+            });
+        </script>
+    </div>
+</body>
+
+</html>
